@@ -1,0 +1,49 @@
+# Python
+*.py[cod]            # Compiled Python files
+*.egg                # Python egg files
+*.egg-info/          # Egg info directories
+*.pyo                # Compiled python files (optional)
+*.pyd                # Compiled Windows python files
+
+# Virtual Environment
+venv/
+env/
+ENV/
+*.env                # Environment variable definition file
+.envrc              # Optional - direnv environment file
+
+# Django stuff:
+*.log                # Log files
+db.sqlite3           # SQLite database
+media/               # User uploaded files
+staticfiles/         # Collected static files (with collectstatic command)
+
+# Migrations:
+**/migrations/*.py[cod]  # Migration files
+**/__pycache__/          # Caches of compiled bytecode
+
+# Pytest cache and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+
+# Jupyter notebooks (optional)
+.ipynb_checkpoints/
+
+# IDE and editor-specific files:
+.vscode/             # Visual Studio Code settings
+.idea/               # PyCharm project files
+*.swp                # Vim swap files
+*.swo                # Vim backup files
+*~                   # Temporary files
+*.bak                # Backup files
+
+# OS-specific files:
+.DS_Store            # macOS Finder metadata
+Thumbs.db            # Windows file metadata
+
+# Docker and deployment related:
+docker-compose*.yml
+Dockerfile
