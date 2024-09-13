@@ -1,62 +1,86 @@
-import requests
-from django.http import JsonResponse
 from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
-from yaml import load, Loader
-from orders.models import Shop, Category, Product, ProductInfo, Parameter, ProductParameter
+from rest_framework.authentication import TokenAuthentication
+import yaml
+from yaml import Loader
+from orders.models import Shop, Category, Product, ProductInfo, ProductParameter, Parameter
+import requests
 
 class PartnerUpdate(APIView):
     """
-    Класс для обновления прайса от поставщика.
+    Класс для обновления прайса от поставщика через загрузку YAML-файла или указание URL
     """
     permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
 
     def post(self, request, *args, **kwargs):
+        # Проверка, что пользователь является магазином
         if request.user.type != 'shop':
-            return JsonResponse({'Status': False, 'Error': 'Только для магазинов'}, status=403)
+            return Response({'Status': False, 'Error': 'Только для магазинов'}, status=403)
 
+        # Получение файла или URL из запроса
+        file = request.FILES.get('file')
         url = request.data.get('url')
-        if not url:
-            return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'}, status=400)
 
-        validate_url = URLValidator()
-        try:
-            validate_url(url)
-        except ValidationError as e:
-            return JsonResponse({'Status': False, 'Error': str(e)}, status=400)
+        if not file and not url:
+            return Response({'Status': False, 'Error': 'Необходимо загрузить YAML-файл или указать URL'}, status=400)
 
-        response = requests.get(url)
-        if response.status_code != 200:
-            return JsonResponse({'Status': False, 'Error': 'Не удалось загрузить данные'}, status=400)
+        if file:
+            try:
+                # Парсинг YAML-файла из загруженного файла
+                data = yaml.load(file.read(), Loader=Loader)
+            except yaml.YAMLError as e:
+                return Response({'Status': False, 'Error': f'Ошибка в YAML файле: {str(e)}'}, status=400)
+        elif url:
+            try:
+                # Загрузка файла по URL
+                response = requests.get(url)
+                response.raise_for_status()
+                data = yaml.load(response.content, Loader=Loader)
+            except requests.exceptions.RequestException as e:
+                return Response({'Status': False, 'Error': f'Ошибка при загрузке файла по URL: {str(e)}'}, status=400)
+            except yaml.YAMLError as e:
+                return Response({'Status': False, 'Error': f'Ошибка в YAML файле: {str(e)}'}, status=400)
 
-        data = load(response.content, Loader=Loader)
-        shop, _ = Shop.objects.get_or_create(name=data['shop'], defaults={'user': request.user})
-        
+        # Проверка наличия ключей в данных
+        required_keys = {'shop', 'categories', 'goods'}
+        if not required_keys.issubset(data.keys()):
+            return Response({'Status': False, 'Error': 'Отсутствуют необходимые ключи в YAML-файле'}, status=400)
+
+        # Создание или получение магазина
+        shop, _ = Shop.objects.get_or_create(name=data['shop'], user_id=request.user.id)
+
+        # Добавление категорий
         for category in data['categories']:
-            category_object, _ = Category.objects.get_or_create(id=category['id'], defaults={'name': category['name']})
-            category_object.shops.add(shop)
+            category_object, _ = Category.objects.get_or_create(id=category['id'], name=category['name'])
+            category_object.shops.add(shop.id)
+            category_object.save()
 
-        ProductInfo.objects.filter(shop=shop).delete()
+        # Удаление старой информации о продуктах для данного магазина
+        ProductInfo.objects.filter(shop_id=shop.id).delete()
 
+        # Добавление новых товаров
         for item in data['goods']:
-            product, _ = Product.objects.get_or_create(name=item['name'], defaults={'category_id': item['category']})
+            product, _ = Product.objects.get_or_create(name=item['name'], category_id=item['category'])
+
             product_info = ProductInfo.objects.create(
                 product=product,
-                shop=shop,
+                external_id=item['id'],
                 name=item['model'],
-                quantity=item['quantity'],
                 price=item['price'],
-                price_rrc=item['price_rrc']
+                price_rrc=item['price_rrc'],
+                quantity=item['quantity'],
+                shop=shop
             )
 
+            # Добавление параметров продукта
             for name, value in item['parameters'].items():
-                parameter, _ = Parameter.objects.get_or_create(name=name)
+                parameter_object, _ = Parameter.objects.get_or_create(name=name)
                 ProductParameter.objects.create(
                     product_info=product_info,
-                    parameter=parameter,
+                    parameter=parameter_object,
                     value=value
                 )
-
-        return JsonResponse({'Status': True})
+                
+        return Response({'Status': True})

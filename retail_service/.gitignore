@@ -1,49 +1,157 @@
+# .gitignore
+
+# ----------------------
+# Общие настройки
+# ----------------------
+
+# Игнорировать файлы и папки операционной системы
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+._*
+
+# ----------------------
 # Python
-*.py[cod]            # Compiled Python files
-*.egg                # Python egg files
-*.egg-info/          # Egg info directories
-*.pyo                # Compiled python files (optional)
-*.pyd                # Compiled Windows python files
+# ----------------------
 
-# Virtual Environment
-venv/
+# Компилированные файлы Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Виртуальные окружения
+.env
+.venv/
 env/
+venv/
 ENV/
-*.env                # Environment variable definition file
-.envrc              # Optional - direnv environment file
+env.bak/
+venv.bak/
 
-# Django stuff:
-*.log                # Log files
-db.sqlite3           # SQLite database
-media/               # User uploaded files
-staticfiles/         # Collected static files (with collectstatic command)
+# Установленные пакеты
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg-info/
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Migrations:
-**/migrations/*.py[cod]  # Migration files
-**/__pycache__/          # Caches of compiled bytecode
+# ----------------------
+# Django
+# ----------------------
 
-# Pytest cache and coverage
-.pytest_cache/
-.coverage
+# Файлы базы данных
+db.sqlite3
+*.sqlite3
+
+# Файлы логов
+*.log
+
+# Локальные настройки
+local_settings.py
+
+# Папки медиа и статических файлов
+media/
+staticfiles/
+static/
+
+# ----------------------
+# Тестирование
+# ----------------------
+
+# Отчеты о покрытии кода
 htmlcov/
-.tox/
-.cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 
-# Jupyter notebooks (optional)
-.ipynb_checkpoints/
+# ----------------------
+# Документация
+# ----------------------
 
-# IDE and editor-specific files:
-.vscode/             # Visual Studio Code settings
-.idea/               # PyCharm project files
-*.swp                # Vim swap files
-*.swo                # Vim backup files
-*~                   # Temporary files
-*.bak                # Backup files
+# Сборка документации Sphinx
+docs/_build/
 
-# OS-specific files:
-.DS_Store            # macOS Finder metadata
-Thumbs.db            # Windows file metadata
+# ----------------------
+# Инструменты разработки
+# ----------------------
 
-# Docker and deployment related:
-docker-compose*.yml
-Dockerfile
+# PyInstaller
+*.manifest
+*.spec
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# ----------------------
+# Среды разработки (IDE)
+# ----------------------
+
+# Visual Studio Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ----------------------
+# Другие настройки
+# ----------------------
+
+# Файлы конфигурации
+*.ini
+*.cfg
+*.env
