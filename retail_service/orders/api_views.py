@@ -6,9 +6,11 @@ from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.auth import authenticate
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer, ContactSerializer
 from .models import Product, Order, Contact, ProductInfo, OrderItem, User, Shop
-from django.contrib.auth import authenticate
+from .tasks import send_welcome_email, send_order_confirmation_email, process_order
+
 
 # Вход пользователя
 class LoginView(APIView):
@@ -36,6 +38,7 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
+            send_welcome_email.delay(user.email)
             response = {
                 'Status': True,
                 'Token': token.key
@@ -211,6 +214,11 @@ class OrderConfirmView(APIView):
             order.status = 'new'
             order.contact = contact
             order.save()
+            
+            # Вызов задач Celery для отправки email и обработки заказа
+            send_order_confirmation_email.delay(order_id)
+            process_order.delay(order_id)
+            
             # Успешное подтверждение заказа
             return Response({'Status': True}, status=status.HTTP_200_OK)
         except Order.DoesNotExist:

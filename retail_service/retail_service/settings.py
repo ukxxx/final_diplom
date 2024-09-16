@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django_rest_passwordreset',
     'rest_framework',
     'rest_framework.authtoken',
-    'rest_framework_simplejwt',
     'django_filters',
     'orders',
     'shop',
@@ -132,7 +131,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-RREST_FRAMEWORK = {
+REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
@@ -151,3 +150,17 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'orders.User'
 
 APPEND_SLASH=False
+
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mailersend.net '
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'MS_FB6xuW@trial-pq3enl61y6rg2vwr.mlsender.net'
+EMAIL_HOST_PASSWORD = '9iksNxG5zw5UyHi9'
+DEFAULT_FROM_EMAIL = 'yuriyuknuzhnyy@gmail.com'
