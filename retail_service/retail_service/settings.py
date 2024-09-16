@@ -143,6 +143,20 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day',
+        'login': '5/min',          # Лимит для эндпоинта входа
+        'register': '2/day',       # Лимит для эндпоинта регистрации
+        'orders': '1000/day',      # Лимит для заказов
+        'products': '1000/day',    # Лимит для товаров
+        'cart': '1000/day',        # Лимит для эндпоинта работы корзиной
+        'contacts': '50/day'     # Лимит для эндпоинта контактов
+    },
 }
 
 AUTHENTICATION_BACKENDS = (

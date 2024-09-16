@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.filters import SearchFilter
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import authenticate
 from .serializers import UserSerializer, ProductSerializer, OrderSerializer, ContactSerializer
@@ -68,12 +69,14 @@ class RegisterView(APIView):
         - `email` (str): Электронная почта пользователя.
         - `password` (str): Пароль пользователя.
         - `username` (str): Имя пользователя.
-        - Другие поля, если есть.
+        -  Другие поля, если есть.
 
         **Ответы:**
         - `201 Created`: Успешная регистрация, возвращает токен.
         - `400 Bad Request`: Ошибки валидации данных.
         """
+        throttle_classes = AnonRateThrottle
+        throttle_scope = 'register'
         serializer = UserSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.save()
@@ -125,6 +128,9 @@ class ProductListView(generics.ListAPIView):
     а также осуществлять поиск по названию продукта и имени магазина.
     """
 
+    throttle_classes = [UserRateThrottle]
+    throttle_scope = 'products'
+
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]  # Требует аутентификации
@@ -169,6 +175,9 @@ class CartView(APIView):
 
     Позволяет пользователю просматривать содержимое корзины, добавлять товары и удалять их.
     """
+    
+    throttle_classes = [UserRateThrottle]
+    throttle_scope = 'cart'
 
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
@@ -276,6 +285,9 @@ class ContactView(APIView):
 
     Позволяет пользователю просматривать, добавлять и удалять контактные данные.
     """
+    
+    throttle_classes = [UserRateThrottle]
+    throttle_scope = 'contacts'
 
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
@@ -349,6 +361,9 @@ class OrderConfirmView(APIView):
     Позволяет пользователю подтвердить заказ, указывая контактные данные.
     При подтверждении заказа изменяет статус заказа и запускает асинхронные задачи.
     """
+    
+    throttle_classes = [UserRateThrottle]
+    throttle_scope = 'orders'
 
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
@@ -401,6 +416,9 @@ class OrderListView(generics.ListAPIView):
 
     Позволяет пользователю просматривать все свои заказы, исключая корзину.
     """
+    
+    throttle_classes = [UserRateThrottle]
+    throttle_scope = 'orders'
 
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
