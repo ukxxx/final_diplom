@@ -20,12 +20,14 @@ from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
 )
+from rest_framework.authtoken import views as drf_views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api-token-auth/', drf_views.obtain_auth_token, name='api-token-auth'),
     path('', include('orders.urls')),
     path('shop/', include('shop.urls')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui')
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
 ]

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     '0.0.0.0',
+    'localhost',
 ]
 
 
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'drf_spectacular',
+    'social_django',
     'orders',
     'shop',
 ]
@@ -63,7 +65,9 @@ ROOT_URLCONF = 'retail_service.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -71,6 +75,10 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                # Процессоры для social-auth
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -161,7 +169,19 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
+    'social_core.backends.github.GithubOAuth2',
+    'social_core.backends.google.GoogleOAuth2',
 )
+
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+
+SITE_ID = 1
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '46882990606-7re0k2j4om141ditb828s4mv4cdd78e2.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+
+SOCIAL_AUTH_GITHUB_KEY = 'Ov23liXBOnWDZdbmtUvY'
+SOCIAL_AUTH_GITHUB_SECRET = '51c050bd13e1812bae61be095feb64057e31f715'
 
 AUTH_USER_MODEL = 'orders.User'
 
