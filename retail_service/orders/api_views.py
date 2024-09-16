@@ -14,7 +14,26 @@ from .tasks import send_welcome_email, send_order_confirmation_email, process_or
 
 # Вход пользователя
 class LoginView(APIView):
+    """
+    Вход пользователя в систему.
+
+    Позволяет пользователю войти в систему, предоставляя email и пароль.
+    Возвращает токен аутентификации при успешном входе.
+    """
+
     def post(self, request):
+        """
+        Обработка POST-запроса для входа пользователя.
+
+        **Параметры запроса:**
+        - `email` (str): Электронная почта пользователя.
+        - `password` (str): Пароль пользователя.
+
+        **Ответы:**
+        - `200 OK`: Успешный вход, возвращает токен.
+        - `400 Bad Request`: Отсутствуют email или пароль.
+        - `401 Unauthorized`: Неверные учетные данные.
+        """
         email = request.data.get('email')
         password = request.data.get('password')
 
@@ -31,9 +50,30 @@ class LoginView(APIView):
             # Неверные учетные данные
             return Response({'Status': False, 'Error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
+
 # Регистрация пользователя
 class RegisterView(APIView):
+    """
+    Регистрация нового пользователя.
+
+    Позволяет новому пользователю зарегистрироваться, создавая учетную запись и возвращая токен аутентификации.
+    Отправляет приветственное письмо после успешной регистрации.
+    """
+
     def post(self, request):
+        """
+        Обработка POST-запроса для регистрации пользователя.
+
+        **Параметры запроса:**
+        - `email` (str): Электронная почта пользователя.
+        - `password` (str): Пароль пользователя.
+        - `username` (str): Имя пользователя.
+        - Другие поля, если есть.
+
+        **Ответы:**
+        - `201 Created`: Успешная регистрация, возвращает токен.
+        - `400 Bad Request`: Ошибки валидации данных.
+        """
         serializer = UserSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.save()
@@ -47,11 +87,26 @@ class RegisterView(APIView):
         # Ошибки валидации сериализатора
         return Response({'Status': False, 'Errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+
 # Выход пользователя
 class LogoutView(APIView):
+    """
+    Выход пользователя из системы.
+
+    Позволяет аутентифицированному пользователю выйти из системы, удаляя его токен аутентификации.
+    """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        """
+        Обработка POST-запроса для выхода пользователя.
+
+        **Ответы:**
+        - `200 OK`: Успешный выход из системы.
+        - `401 Unauthorized`: Отсутствие токена аутентификации.
+        - `400 Bad Request`: Не удалось удалить токен.
+        """
         try:
             request.user.auth_token.delete()
             # Успешный выход из системы
@@ -60,40 +115,72 @@ class LogoutView(APIView):
             # Не удалось удалить токен
             return Response({'Status': False, 'Error': 'Something went wrong'}, status=status.HTTP_400_BAD_REQUEST)
 
+
 # Список продуктов с фильтрацией и поиском
 class ProductListView(generics.ListAPIView):
+    """
+    Список доступных продуктов.
+
+    Позволяет просматривать список продуктов с возможностью фильтрации по магазинам и категориям,
+    а также осуществлять поиск по названию продукта и имени магазина.
+    """
+
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     permission_classes = [IsAuthenticated]  # Требует аутентификации
     authentication_classes = [TokenAuthentication]  # Аутентификация через токен
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    
+
     # Поля для фильтрации
     filterset_fields = ['product_infos__shop', 'category']
-    
+
     # Поля для поиска
     search_fields = ['name', 'product_infos__name']
 
     def get_queryset(self):
+        """
+        Получение и дополнительная фильтрация набора запросов.
+
+        **Дополнительная фильтрация:**
+        - `shop_id` (int): ID магазина для фильтрации продуктов.
+        - `category_id` (int): ID категории для фильтрации продуктов.
+
+        **Возвращает:**
+        - Отфильтрованный набор продуктов.
+        """
         queryset = super().get_queryset()
-        
+
         # Дополнительная фильтрация, если требуется
         shop_id = self.request.query_params.get('shop_id')
         category_id = self.request.query_params.get('category_id')
-        
+
         if shop_id:
             queryset = queryset.filter(product_infos__shop_id=shop_id)
         if category_id:
             queryset = queryset.filter(category_id=category_id)
-        
+
         return queryset
+
 
 # Работа с корзиной
 class CartView(APIView):
+    """
+    Управление корзиной пользователя.
+
+    Позволяет пользователю просматривать содержимое корзины, добавлять товары и удалять их.
+    """
+
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
     def get(self, request):
+        """
+        Получение содержимого корзины.
+
+        **Ответы:**
+        - `200 OK`: Возвращает данные корзины.
+        - `404 Not Found`: Корзина пуста.
+        """
         cart = Order.objects.filter(user=request.user, status='basket').first()
         if cart:
             serializer = OrderSerializer(cart)
@@ -102,6 +189,16 @@ class CartView(APIView):
         return Response({'Status': False, 'Error': 'Cart is empty'}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request):
+        """
+        Добавление товаров в корзину.
+
+        **Параметры запроса:**
+        - `items` (list): Список товаров для добавления. Каждый элемент должен содержать `product_id` и `quantity`.
+
+        **Ответы:**
+        - `201 Created`: Успешное добавление товаров.
+        - `400 Bad Request`: Отсутствуют товары или неверный формат данных.
+        """
         items = request.data.get('items')
 
         if not items:
@@ -132,6 +229,16 @@ class CartView(APIView):
         return Response({'Status': True}, status=status.HTTP_201_CREATED)
 
     def delete(self, request):
+        """
+        Удаление товаров из корзины.
+
+        **Параметры запроса:**
+        - `product_ids` (str): Строка с идентификаторами товаров, разделёнными запятыми.
+
+        **Ответы:**
+        - `204 No Content`: Успешное удаление товаров.
+        - `400 Bad Request`: Отсутствуют идентификаторы или неверный формат.
+        """
         # Получаем строку с идентификаторами через запятую
         product_ids = request.data.get('product_ids')
         if not product_ids:
@@ -161,17 +268,44 @@ class CartView(APIView):
             # Товары не найдены в корзине
             return Response({'Status': False, 'Error': 'Items not found in cart'}, status=400)
 
+
 # Работа с контактами
 class ContactView(APIView):
+    """
+    Управление контактами пользователя.
+
+    Позволяет пользователю просматривать, добавлять и удалять контактные данные.
+    """
+
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
+    serializer_class = ContactSerializer
 
     def get(self, request):
+        """
+        Получение списка контактов пользователя.
+
+        **Ответы:**
+        - `200 OK`: Возвращает список контактов.
+        """
         contacts = Contact.objects.filter(user=request.user)
         serializer = ContactSerializer(contacts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        """
+        Добавление нового контакта.
+
+        **Параметры запроса:**
+        - `name` (str): Имя контакта.
+        - `phone` (str): Телефонный номер контакта.
+        -  Другие поля, пристутствующие в модели Контакта.
+
+
+        **Ответы:**
+        - `201 Created`: Успешное создание контакта.
+        - `400 Bad Request`: Ошибки валидации данных.
+        """
         serializer = ContactSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(user=request.user)
@@ -181,6 +315,17 @@ class ContactView(APIView):
         return Response({'Status': False, 'Errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
+        """
+        Удаление контакта пользователя.
+
+        **Параметры запроса:**
+        - `id` (int): Идентификатор контакта для удаления.
+
+        **Ответы:**
+        - `204 No Content`: Успешное удаление контакта.
+        - `400 Bad Request`: Отсутствует идентификатор контакта.
+        - `404 Not Found`: Контакт не найден.
+        """
         contact_id = request.data.get('id')
         if not contact_id:
             # Необходимо указать ID контакта для удаления
@@ -195,12 +340,32 @@ class ContactView(APIView):
             # Контакт не найден
             return Response({'Status': False, 'Error': 'Contact not found'}, status=status.HTTP_404_NOT_FOUND)
 
+
 # Подтверждение заказа
 class OrderConfirmView(APIView):
+    """
+    Подтверждение заказа пользователя.
+
+    Позволяет пользователю подтвердить заказ, указывая контактные данные.
+    При подтверждении заказа изменяет статус заказа и запускает асинхронные задачи.
+    """
+
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
     def post(self, request):
+        """
+        Обработка POST-запроса для подтверждения заказа.
+
+        **Параметры запроса:**
+        - `order_id` (int): Идентификатор заказа.
+        - `contact_id` (int): Идентификатор контактных данных.
+
+        **Ответы:**
+        - `200 OK`: Успешное подтверждение заказа.
+        - `400 Bad Request`: Отсутствуют `order_id` или `contact_id`.
+        - `404 Not Found`: Заказ или контакт не найдены.
+        """
         order_id = request.data.get('order_id')
         contact_id = request.data.get('contact_id')
 
@@ -214,11 +379,11 @@ class OrderConfirmView(APIView):
             order.status = 'new'
             order.contact = contact
             order.save()
-            
+
             # Вызов задач Celery для отправки email и обработки заказа
             send_order_confirmation_email.delay(order_id)
             process_order.delay(order_id)
-            
+
             # Успешное подтверждение заказа
             return Response({'Status': True}, status=status.HTTP_200_OK)
         except Order.DoesNotExist:
@@ -228,12 +393,25 @@ class OrderConfirmView(APIView):
             # Контакт не найден
             return Response({'Status': False, 'Error': 'Contact not found'}, status=status.HTTP_404_NOT_FOUND)
 
+
 # История заказов
 class OrderListView(generics.ListAPIView):
+    """
+    Просмотр истории заказов пользователя.
+
+    Позволяет пользователю просматривать все свои заказы, исключая корзину.
+    """
+
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication]
 
     def get_queryset(self):
+        """
+        Получение набора запросов для истории заказов.
+
+        **Возвращает:**
+        - Все заказы пользователя, кроме тех, у которых статус 'basket'.
+        """
         # Получаем все заказы пользователя, кроме корзины
         return Order.objects.filter(user=self.request.user).exclude(status='basket')
