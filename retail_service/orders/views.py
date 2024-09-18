@@ -39,7 +39,6 @@ class SocialAuthView(APIView):
         - `400 Bad Request`: Неверные данные.
         - `401 Unauthorized`: Аутентификация не удалась.
         """
-        print(f"Получен провайдер: {provider}")
 
         access_token = request.data.get('access_token')
         if not access_token:
