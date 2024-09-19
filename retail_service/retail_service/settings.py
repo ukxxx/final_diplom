@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
     'imagekit',
-    'cachalot', 
+    'cachalot',
+    'silk',
     'social_django',
     'orders',
     'shop',
@@ -63,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'retail_service.urls'
@@ -138,6 +140,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -190,7 +193,7 @@ SOCIAL_AUTH_GITHUB_SECRET = '51c050bd13e1812bae61be095feb64057e31f715'
 
 AUTH_USER_MODEL = 'orders.User'
 
-APPEND_SLASH=False
+APPEND_SLASH=True
 
 # Celery settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
