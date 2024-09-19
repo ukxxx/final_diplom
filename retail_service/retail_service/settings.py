@@ -41,12 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
     'django.contrib.staticfiles',
     'django_rest_passwordreset',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'drf_spectacular',
+    'imagekit',
     'social_django',
     'orders',
     'shop',
@@ -190,8 +192,8 @@ AUTH_USER_MODEL = 'orders.User'
 APPEND_SLASH=False
 
 # Celery settings
-CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -202,3 +204,9 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'MS_FB6xuW@trial-pq3enl61y6rg2vwr.mlsender.net'
 EMAIL_HOST_PASSWORD = '9iksNxG5zw5UyHi9'
 DEFAULT_FROM_EMAIL = 'yuriyuknuzhnyy@gmail.com'
+
+# Image settings
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

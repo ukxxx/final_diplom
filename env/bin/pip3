@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/home/uk/OneDrive/Python Projects/Learning/final_diplom/env/bin/python" "$0" "$@"
+'''exec' "/home/uk/OneDrive/Python Projects/Learning/final_diplom/env/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

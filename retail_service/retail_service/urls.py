@@ -21,6 +21,8 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 from rest_framework.authtoken import views as drf_views
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -33,3 +35,6 @@ urlpatterns = [
     path(r'jet/', include('jet.urls', 'jet')),
     path(r'jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

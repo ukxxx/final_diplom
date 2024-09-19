@@ -5,7 +5,7 @@ from .models import User, Product, Order, OrderItem, Contact, ProductParameter, 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'password', 'type']
+        fields = ['first_name', 'last_name', 'email', 'password', 'type', 'avatar']
         extra_kwargs = {'password': {'write_only': True}}
 
     def validate_email(self, value):
@@ -17,7 +17,19 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # Используем менеджер create_user для создания пользователя
-        user = User.objects.create_user(**validated_data)
+        # user = User.objects.create_user(**validated_data)
+        # avatar = validated_data.pop('avatar', None)
+        # if avatar:
+        #     user.avatar = avatar
+        # user.save()
+        # return user
+        password = validated_data.pop('password')
+        avatar = validated_data.pop('avatar', None)
+        user = User(**validated_data)
+        user.set_password(password)
+        if avatar:
+            user.avatar = avatar
+        user.save()
         return user
 
 # Сериализатор для параметров продукта

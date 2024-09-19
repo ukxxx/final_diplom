@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, filters
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.filters import SearchFilter
@@ -21,6 +21,9 @@ class LoginView(APIView):
     Позволяет пользователю войти в систему, предоставляя email и пароль.
     Возвращает токен аутентификации при успешном входе.
     """
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request):
         """
@@ -61,6 +64,10 @@ class RegisterView(APIView):
     Отправляет приветственное письмо после успешной регистрации.
     """
 
+    permission_classes = [AllowAny]
+    authentication_classes = []
+        
+
     def post(self, request):
         """
         Обработка POST-запроса для регистрации пользователя.
@@ -75,13 +82,16 @@ class RegisterView(APIView):
         - `201 Created`: Успешная регистрация, возвращает токен.
         - `400 Bad Request`: Ошибки валидации данных.
         """
+        
         throttle_classes = AnonRateThrottle
         throttle_scope = 'register'
+        
+
         serializer = UserSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.save()
             token, created = Token.objects.get_or_create(user=user)
-            send_welcome_email.delay(user.email)
+            send_welcome_email.delay(user.id)
             response = {
                 'Status': True,
                 'Token': token.key

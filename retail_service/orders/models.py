@@ -1,6 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission, AbstractBaseUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django_rest_passwordreset.tokens import get_token_generator
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
+
 
 # Выбор состояний заказа
 STATE_CHOICES = (
@@ -46,6 +49,7 @@ class UserManager(BaseUserManager):
         # Создание суперпользователя
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
 
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff=True')
@@ -62,6 +66,11 @@ class User(AbstractUser):
     company = models.CharField('Company', max_length=40, blank=True)
     position = models.CharField('Position', max_length=40, blank=True)
     type = models.CharField('User type', choices=USER_TYPE_CHOICES, max_length=5, default='buyer')
+    avatar = models.ImageField(upload_to='avatars')
+    avatar_thumbnail = ImageSpecField(source='avatar',
+                                      processors=[ResizeToFill(50, 50)],
+                                      format='JPEG',
+                                      options={'quality': 60})
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -98,6 +107,11 @@ class Category(models.Model):
 class Product(models.Model):
     category = models.ForeignKey(Category, related_name='products', on_delete=models.CASCADE)
     name = models.CharField(max_length=80)
+    image = models.ImageField(upload_to='product_image')
+    image_thumbnail = ImageSpecField(source='image',
+                                     processors=[ResizeToFill(200, 200)],
+                                     format='JPEG',
+                                     options={'quality': 60})
 
     def __str__(self):
         return self.name
